@@ -1,21 +1,25 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "Math.h"
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <array>
+using namespace std;
 constexpr int SCREEN_WIDTH = 1280;
 constexpr int SCREEN_HEIGHT = 720;
-float Random(float min, float max)
-{
-    return min + (rand() / ((float)RAND_MAX / (max - min)));
-}
 void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* userParam);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 GLuint CreateShader(GLint type, const char* path);
 GLuint CreateProgram(GLuint vs, GLuint fs);
+
+array<int, GLFW_KEY_LAST> gKeysCurr{}, gKeysPrev{};
+bool IsKeyDown(int key);
+bool IsKeyUp(int key);
+bool IsKeyPressed(int key);
 
 int main(void)
 {
@@ -34,7 +38,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
-    GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Pog", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Assignment 1 - Sheldon Pacheco", NULL, NULL);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -51,10 +55,13 @@ int main(void)
 
 
     GLuint vs = CreateShader(GL_VERTEX_SHADER, "./assets/shaders/default.vert");
-    GLuint fs = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/color.frag");
-    GLuint shader = CreateProgram(vs, fs);
+    GLuint fsUniformColor = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/uniform_color.frag");
+    GLuint vsVertexColor = CreateShader(GL_VERTEX_SHADER, "./assets/shaders/vertex_color.vert");
+    GLuint fsVertexColor = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/vertex_color.frag");
+    GLuint shaderUniformColor = CreateProgram(vs, fsUniformColor);
+    GLuint shaderVertexColor = CreateProgram(vsVertexColor, fsVertexColor);
 
-    float positions[] = {
+    Vector3 positions[] = {
         0.5f, -0.5f, 0.0f,
         0.0f, 1.0f, 0.0f,
         -0.5f, -0.5f, 0.0f
@@ -69,44 +76,106 @@ int main(void)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
 
-    glUseProgram(shader);
-    glPointSize(54.0f);
+   // glUseProgram(shader);
+   // glPointSize(54.0f);
 
+    GLint u_world = glGetUniformLocation(shaderUniformColor, "u_world");
+    GLint u_color = glGetUniformLocation(shaderUniformColor, "u_color");
+    GLint u_intensity = glGetUniformLocation(shaderUniformColor, "u_intensity");
+
+    int object = 0;
+    printf("Object %i\n", object + 1);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        /* Render here */
-        
-        glClearColor(0.22f, 0.49f, 0.17f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        
-        //glDrawArrays(GL_POINTS, 0, 3);
-        //glDrawArrays(GL_LINE_LOOP, 0, 3);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        //float x = Random(0.0f, SCREEN_WIDTH);
-        //float y = Random(0.0f, SCREEN_HEIGHT);
-        //glfwSetCursorPos(window, x, y);
+
+        float time = glfwGetTime();
+        Matrix world = MatrixIdentity();
+        float st = sinf(time) * 1.0f;
+        float ct = cosf(time) * 1.0f;
+        float intensity = (sinf(time) + 1.0f) / 2.0f;        
+        switch (object + 1)
+        {
+            // Hint: Change the colour to white 
+        case 1:
+            // We can modify the world matrix that transforms our vertices the same way we modify colours.
+            // This is because they are "uniform" variables meaning they're constant across our shader program!
+            glUseProgram(shaderUniformColor);
+            glUniformMatrix4fv(u_world, 1, GL_FALSE, ToFloat16(world).v);
+            glUniform3f(u_color, 1.0f, 1.0f, 1.0f);
+            glUniform1f(u_intensity, 1.0f);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+            break;
+
+            // Hint: Switch the shader to colour based on vertex positions
+            // If you get errors in the console, comment out all unused uniforms
+        case 2:
+            glUseProgram(shaderVertexColor);  
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+            break;
+
+            // Hint: Make intensity change from 0 to 1 using a periodic function (sin or cos)
+        case 3:
+            glUseProgram(shaderUniformColor);
+            glUniformMatrix4fv(u_world, 1, GL_FALSE, ToFloat16(world).v);
+            glUniform3f(u_color, intensity, 0.0f, 1.0f - intensity);
+            glUniform1f(u_intensity, 1.0f);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+            break;
+
+            // Hint: Use the Translate function
+        case 4:
+            world = Translate(st, 0.0f, 0.0f);
+            glUseProgram(shaderUniformColor);
+            glUniformMatrix4fv(u_world, 1, GL_FALSE, ToFloat16(world).v);
+            glUniform3f(u_color, 1.0f, 0.0f, 1.0f);
+            glUniform1f(u_intensity, 1.0f);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+            break;
+
+            // Hint: Use the RotateZ function
+        case 5:
+            world = Scale(ct, st, 0.0f) *
+                RotateZ(100.0f * time * DEG2RAD) *
+                Translate(0.0f, sinf(time), 0.0f);
+            glUseProgram(shaderUniformColor);
+            glUniformMatrix4fv(u_world, 1, GL_FALSE, ToFloat16(world).v);
+            glUniform3f(u_color, 0.0f, 1.0f, 1.0f);
+            glUniform1f(u_intensity, 1.0f);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+            world = RotateZ(100.0f * time * DEG2RAD);
+            break;
+        }
+
+        // Change object when space is pressed
+        if (IsKeyPressed(GLFW_KEY_SPACE))
+        {
+            ++object %= 5;
+            printf("Object %i\n", object + 1);
+        }
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
-        /* Poll for and process events */
+        /* Poll and process events */
+        memcpy(gKeysPrev.data(), gKeysCurr.data(), GLFW_KEY_LAST * sizeof(int));
         glfwPollEvents();
     }
 
     glfwTerminate();
-
     return 0;
 }
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    const char* name = glfwGetKeyName(key, scancode);
+    // Disable repeat events so keys are either up or down
+    if (action == GLFW_REPEAT) return;
 
-    if (action == GLFW_PRESS)
-        printf("%s\n", name);
-
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (key == GLFW_KEY_ESCAPE)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+    gKeysCurr[key] = action;
 }
 GLuint CreateShader(GLint type, const char* path)
 {
@@ -223,4 +292,18 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
     case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
     } std::cout << std::endl;
     std::cout << std::endl;
+}
+bool IsKeyDown(int key)
+{
+    return gKeysCurr[key] == GLFW_PRESS;
+}
+
+bool IsKeyUp(int key)
+{
+    return gKeysCurr[key] == GLFW_RELEASE;
+}
+
+bool IsKeyPressed(int key)
+{
+    return gKeysPrev[key] == GLFW_PRESS && gKeysCurr[key] == GLFW_RELEASE;
 }
