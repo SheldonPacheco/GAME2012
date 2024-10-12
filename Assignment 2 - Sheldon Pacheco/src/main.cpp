@@ -241,7 +241,7 @@ int main(void)
     GLint u_color = glGetUniformLocation(shaderUniformColor, "u_color");
     GLint u_intensity = glGetUniformLocation(shaderUniformColor, "u_intensity");
 
-    int object = 3;
+    int object = 1;
     printf("Object %i\n", object + 1);
 
     Projection projection = PERSP;
@@ -320,7 +320,7 @@ int main(void)
 
         GLuint shaderProgram = GL_NONE;
 
-        switch (object + 1)
+        switch (object)
         {
         //case 1:
         //    shaderProgram = shaderVertexBufferColor;
@@ -378,42 +378,59 @@ int main(void)
         ////    DrawMesh(shapeMesh);
         ////    break;
         
-        case 1:  // Add this new case to draw the shrinking squares
+        case 1:  
         
-            shaderProgram = shaderLines; // Use the line-drawing shader program
+            shaderProgram = shaderLines; 
             glUseProgram(shaderProgram);
 
-            // The initial square's vertices
-            Vector2 squareVertices[4] = {
-                { -1.0f,  1.0f }, // top-left
-                {  1.0f,  1.0f }, // top-right
-                {  1.0f, -1.0f }, // bottom-right
-                { -1.0f, -1.0f }  // bottom-left
+            
+            Vector3 colors[8] = {
+                {1.0f, 0.0f, 0.0f},  
+                {0.0f, 1.0f, 0.0f},  
+                {0.0f, 0.0f, 1.0f},  
+                {1.0f, 1.0f, 0.0f},  
+                {1.0f, 0.0f, 1.0f},  
+                {0.0f, 1.0f, 1.0f},  
+                {0.5f, 0.5f, 0.5f},  
+                {1.0f, 1.0f, 1.0f}   
             };
 
-            Vector2 nextVertices[4]; // For storing the midpoints of the current square
+           
+            Vector2 squareVertices[4] = {
+                { -1.0f,  1.0f }, 
+                {  1.0f,  1.0f }, 
+                {  1.0f, -1.0f }, 
+                { -1.0f, -1.0f }  
+            };
 
-            glLineWidth(1.0f);
+            Vector2 nextVertices[4]; 
 
-            for (int squareCount = 0; squareCount < 8; ++squareCount) // Draw 8 squares
+            glLineWidth(1.0f); 
+
+            
+            glBindVertexArray(vaoLines);
+
+            
+            for (int squareCount = 0; squareCount < 8; ++squareCount)
             {
-                glBindVertexArray(vaoLines); // Bind the VAO for line rendering
+                
+                glVertexAttrib3fv(1, (float*)&colors[squareCount]); 
+
+               
                 glBindBuffer(GL_ARRAY_BUFFER, pboLines);
                 glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(squareVertices), squareVertices);
-                glDrawArrays(GL_LINE_LOOP, 0, 4); // Draw the current square
 
-                // Calculate the midpoints for the next square
+                
+                glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+                
                 for (int i = 0; i < 4; ++i)
                 {
-                    Vector2 nextPoint = (squareVertices[i] + squareVertices[(i + 1) % 4]) * 0.5f;
-                    nextVertices[i] = nextPoint;
+                    nextVertices[i] = (squareVertices[i] + squareVertices[(i + 1) % 4]) * 0.5f;
                 }
 
-                // Copy the next vertices back into the current vertices for the next iteration
-                for (int i = 0; i < 4; ++i)
-                {
-                    squareVertices[i] = nextVertices[i];
-                }
+                
+                memcpy(squareVertices, nextVertices, sizeof(nextVertices));
             }
 
             break;
