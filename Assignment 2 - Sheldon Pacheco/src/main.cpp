@@ -384,15 +384,27 @@ int main(void)
             glUseProgram(shaderProgram);
 
             
-            Vector3 colors[8] = {
-                {1.0f, 0.0f, 0.0f},  
-                {0.0f, 1.0f, 0.0f},  
-                {0.0f, 0.0f, 1.0f},  
-                {1.0f, 1.0f, 0.0f},  
-                {1.0f, 0.0f, 1.0f},  
-                {0.0f, 1.0f, 1.0f},  
+            Vector3 colors[20] = {
+                {1.0f, 0.0f, 0.0f},   
+                {0.0f, 1.0f, 0.0f},   
+                {0.0f, 0.0f, 1.0f},   
+                {1.0f, 1.0f, 0.0f},   
+                {1.0f, 0.0f, 1.0f},   
+                {0.0f, 1.0f, 1.0f},   
                 {0.5f, 0.5f, 0.5f},  
-                {1.0f, 1.0f, 1.0f}   
+                {1.0f, 1.0f, 1.0f},   
+                {1.0f, 0.5f, 0.0f},   
+                {0.5f, 0.0f, 1.0f},   
+                {0.0f, 0.5f, 1.0f},   
+                {0.5f, 1.0f, 0.0f},   
+                {0.7f, 0.2f, 0.2f},   
+                {0.2f, 0.7f, 0.2f},   
+                {0.2f, 0.2f, 0.7f},  
+                {0.8f, 0.5f, 0.2f},   
+                {0.3f, 0.7f, 0.4f},   
+                {0.9f, 0.3f, 0.7f},   
+                {0.7f, 0.8f, 0.2f},   
+                {0.2f, 0.4f, 0.8f}    
             };
 
            
@@ -411,7 +423,7 @@ int main(void)
             glBindVertexArray(vaoLines);
 
             
-            for (int squareCount = 0; squareCount < 8; ++squareCount)
+            for (int squareCount = 0; squareCount < 20; ++squareCount)
             {
                 
                 glVertexAttrib3fv(1, (float*)&colors[squareCount]); 
