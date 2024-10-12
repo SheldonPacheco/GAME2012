@@ -58,8 +58,11 @@ int main(void)
     GLuint fsUniformColor = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/uniform_color.frag");
     GLuint vsVertexColor = CreateShader(GL_VERTEX_SHADER, "./assets/shaders/vertex_color.vert");
     GLuint fsVertexColor = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/vertex_color.frag");
+
+
     GLuint shaderUniformColor = CreateProgram(vs, fsUniformColor);
     GLuint shaderVertexColor = CreateProgram(vsVertexColor, fsVertexColor);
+   // GLuint shaderVertexBufferColor = CreateProgram(vsColorBufferColor, fsVertexColor);
 
     Vector3 positions[] = {
         0.5f, -0.5f, 0.0f,
